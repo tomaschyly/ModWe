@@ -18,4 +18,9 @@ All the data is stored locally, it is not transmitted online.
 
 ## How to Use
 
-*Coming soon...*
+1. Use the toolbar button to open popup.
+2. Use the right button to open options.
+3. Add Page, write any Name you want as identifier. Url is used from popup for quick navigation. RegExp needs to be valid RegExp (e.g.: /google\.com/), it is used by script to determine correct Page for CSS/JS injection.
+4. Use the settings button to open Page settings, here you can write your CSS/JS.
+5. In popup make sure to toggle to Enabled.
+6. Now when you visit any Page which is valid by your RegExp, CSS/JS will be injected.

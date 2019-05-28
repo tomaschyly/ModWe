@@ -8,7 +8,7 @@ Both CSS and JS get inserted only after Page has been fully loaded. They are als
 
 ## Installation
 
-*Coming soon...*
+1. Go [here](https://addons.mozilla.org/sk/firefox/addon/modwe/) and click Add to Firefox.
 
 ## Important Notes
 

@@ -116,6 +116,16 @@ if (typeof TCH.Options === 'undefined') {
 		Remove: function (e, params) {
 			const item = TCH.Utils.FindNearestParent (e.target, 'item');
 
+			const panel = document.getElementById ('page-settings-panel');
+			if (panel.style.display !== 'none') {
+				const openPageId = document.getElementById ('page-id').value;
+				const removingPageId = item.dataset.id;
+
+				if (openPageId === removingPageId) {
+					this.PageSettingsClose ();
+				}
+			}
+
 			item.parentNode.removeChild (item);
 
 			this.Save (params);

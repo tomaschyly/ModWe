@@ -1,0 +1,41 @@
+html,
+body { width: 240px; min-height: 240px; height: auto; padding: 0; margin: 0; color: black; font-size: 18px; line-height: 1.2; font-family: Consolas, 'Courier New', monospace; background: black; }
+body { display: flex; flex-direction: column; }
+
+h1 { margin: 0; color: #ffd700; font-size: 22px; line-height: 1.2; }
+h2 { margin: 0 0 16px 0; font-size: 20px; line-height: 1.2; }
+p { margin: 0 0 16px 0; }
+
+button { padding: 4px 8px; border: 1px solid black; margin-bottom: 16px; color: black; background: transparent; transition: color 0.4s linear, border 0.4s linear, background 0.4s linear; }
+button:hover,
+button:focus { border-color: #ffd700; color: #ffd700; background: black; cursor: pointer; }
+button.red { border-color: red; color: red; }
+button.red:hover,
+button.red:focus { border-color: black; color: black; background: red; }
+button:focus { outline: none; }
+
+form select { width: 100%; margin-bottom: 16px; }
+form .input-checkbox { width: 100%; margin-bottom: 16px; }
+
+#browser-popup { display: flex; flex-direction: column; flex: 1 0 auto; }
+
+.navigation { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #ffd700; }
+.navigation > * { flex: 0 0 auto; }
+.navigation .logo { display: inline-block; width: auto; height: 22px; margin-right: 8px; }
+.navigation button { display: inline-block; padding: 0; border: 0; margin: 0 0 0 auto; color: #DDDDDD; background: transparent; }
+.navigation button:hover,
+.navigation button:focus { color: #ffd700; }
+.navigation svg { display: inline-block; width: 22px; height: 22px; }
+
+.content { flex: 1 0 auto; padding: 16px 8px 0 8px; background: #DDDDDD; }
+
+#toggle-enabled { width: 100%; border-color: red; color: red; }
+#toggle-enabled:hover,
+#toggle-enabled:focus { border-color: black; color: black; background: red; }
+#toggle-enabled.enabled { border-color: green; color: green; }
+#toggle-enabled.enabled:hover,
+#toggle-enabled.enabled:focus { border-color: black; color: black; background: green; }
+
+#navigate { width: 100%; margin-bottom: 4px; }
+
+#message.error { color: red; }

@@ -6,7 +6,7 @@
 		}
 	},
 	"name": "ModWe",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Modify websites using custom CSS and JS snippets.",
 	"icons": {
 		"48": "icons/ic_dashboard_48dp_1x.png",
@@ -16,7 +16,8 @@
 		"<all_urls>",
 		"storage",
 		"activeTab",
-		"tabs"
+		"tabs",
+		"downloads"
 	],
 	"background": {
 		"scripts": ["background.js"]

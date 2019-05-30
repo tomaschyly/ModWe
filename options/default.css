@@ -29,6 +29,13 @@ form textarea:focus { border-color: #ffd700; background: white; }
 
 .titlebar { display: flex; align-items: center; padding-bottom: 16px; background: black; }
 .titlebar .logo { display: inline-block; width: auto; height: 22px; margin-right: 8px; }
+.controls { margin-left: auto; }
+.controls button { display: inline-block; padding: 0; border: 0; margin: 0 0 0 auto; color: #DDDDDD; background: transparent; }
+.controls button:hover,
+.controls button:focus { color: #ffd700; }
+.controls svg { display: inline-block; width: 22px; height: 22px; }
+
+.import-area { display: none; }
 
 .template { display: none; }
 

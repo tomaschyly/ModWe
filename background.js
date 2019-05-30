@@ -49,10 +49,26 @@ if (typeof TCH.Background === 'undefined') {
 			},
 
 			/**
+			 * Get all of data.
+			 */
+			GetAll: function () {
+				return this.data;
+			},
+
+			/**
 			 * Set data for key.
 			 */
 			Set: function (key, value) {
 				this.data [key] = value;
+
+				browser.storage.local.set (this.data);
+			},
+
+			/**
+			 * Set all of data.
+			 */
+			SetAll: function (data) {
+				this.data = data;
 
 				browser.storage.local.set (this.data);
 			}
@@ -135,8 +151,17 @@ if (typeof TCH.Background === 'undefined') {
 							identificator: message.identificator
 						});
 						break;
+					case 'config-get-all':
+						browser.runtime.sendMessage ({
+							type: 'config-get-all',
+							data: this.Config.GetAll ()
+						});
+						break;
 					case 'config-set':
 						this.Config.Set (message.key, message.value);
+						break;
+					case 'config-set-all':
+						this.Config.SetAll (message.data);
 						break;
 					default:
 						throw Error ('Unsupported message by background script');

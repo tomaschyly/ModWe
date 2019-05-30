@@ -13,6 +13,8 @@ if (typeof TCH.Options === 'undefined') {
 		 * Options initialization.
 		 */
 		Init: function () {
+			this.Data.Init ();
+
 			const dynamic = document.querySelectorAll ('.dynamic');
 
 			for (let i = 0; i < dynamic.length; i++) {
@@ -54,6 +56,10 @@ if (typeof TCH.Options === 'undefined') {
 		 * Initialize dynamic items by data.
 		 */
 		InitItems: function (params, data) {
+			while (params.items.lastChild) {
+				params.items.removeChild (params.items.lastChild);
+			}
+
 			if (data !== null && Array.isArray (data)) {
 				for (let i = 0; i < data.length; i++) {
 					this.Add (params, data [i]);
@@ -153,6 +159,95 @@ if (typeof TCH.Options === 'undefined') {
 			});
 		},
 
+		Data: {
+			/**
+			 * Data initialization.
+			 */
+			Init: function () {
+				document.getElementById ('import').addEventListener ('click', this.Import.bind (this));
+				document.getElementById ('export').addEventListener ('click', this.Export.bind (this));
+
+				document.getElementById ('import-file').addEventListener ('change', this.ImportFile.bind (this));
+			},
+
+			/**
+			 * Import options from file.
+			 */
+			Import: function () {
+				document.getElementById ('import-file').click ();
+			},
+
+			/**
+			 * Import file changed, import json as options.
+			 */
+			ImportFile: function () {
+				const input = document.getElementById ('import-file');
+
+				if (input.files.length > 0) {
+					const file = input.files [0];
+					const reader = new FileReader ();
+
+					reader.onload = e => {
+						const fileContents = e.target.result;
+
+						if (fileContents !== '') {
+							const data = JSON.parse (fileContents);
+
+							if (typeof data === 'object') {
+								browser.runtime.sendMessage ({
+									type: 'config-set-all',
+									data: data
+								});
+
+								setTimeout (() => {
+									browser.runtime.sendMessage ({
+										type: 'config-get',
+										key: 'pages',
+										identificator: 'pages'
+									});
+								}, 1);
+							}
+						}
+					};
+					reader.readAsBinaryString (file);
+				}
+
+				input.value = '';
+			},
+
+			/**
+			 * Export options to file.
+			 */
+			Export: function () {
+				browser.runtime.sendMessage ({
+					type: 'config-get-all'
+				});
+			},
+
+			/**
+			 * Have all options, now export using default browser download.
+			 */
+			ExportData: async function (data) {
+				data = JSON.stringify (data);
+				const blob = new Blob ([data], {type: 'application/json'});
+
+				const onChangeListener = downloadDelta => {
+					if (downloadDelta.id === downloadId && downloadDelta.state && downloadDelta.state.current === 'complete') {
+						URL.revokeObjectURL (dataUrl);
+
+						browser.downloads.onChanged.removeListener (onChangeListener);
+					}
+				};
+
+				const dataUrl = URL.createObjectURL (blob);
+				browser.downloads.onChanged.addListener (onChangeListener);
+				const downloadId = await browser.downloads.download ({
+					url: dataUrl,
+					filename: 'ModWe.json'
+				});
+			}
+		},
+
 		/**
 		 * Message received, handle according to type.
 		 */
@@ -165,6 +260,9 @@ if (typeof TCH.Options === 'undefined') {
 						} else if (message.key === 'page_settings') {
 							this.PageSettingsInit (message.value, message.identificator);
 						}
+						break;
+					case 'config-get-all':
+						this.Data.ExportData (message.data);
 						break;
 					default:
 						throw Error ('Unsupported message by options script');

@@ -48,6 +48,7 @@ if (typeof TCH.Options === 'undefined') {
 
 			document.getElementById ('page-settings').addEventListener ('submit', this.PageSettingsSave.bind (this));
 			document.getElementById ('page-settings-close').addEventListener ('click', this.PageSettingsClose.bind (this));
+			document.getElementById ('page-settings-close-nosave').addEventListener ('click', this.PageSettingsClose.bind (this));
 
 			browser.runtime.onMessage.addListener (this.OnMessage.bind (this));
 		},
@@ -245,6 +246,55 @@ if (typeof TCH.Options === 'undefined') {
 					url: dataUrl,
 					filename: 'ModWe.json'
 				});
+
+				TCH.Options.Modal.Open ('Options exported to file - ModWe.json');
+			}
+		},
+
+		Modal: {
+			closeTimeout: null,
+
+			/**
+			 * Open modal with message and using animation.
+			 */
+			Open: function (message) {
+				const self = this;
+
+				if (this.closeTimeout !== null) {
+					clearTimeout (this.closeTimeout);
+					this.closeTimeout = null;
+				}
+
+				const modal = document.getElementById ('modal');
+
+				modal.querySelector ('.modal-content p').textContent = message;
+
+				modal.classList.add ('visible');
+				const height = modal.getBoundingClientRect ().height;
+				modal.style.top = '-' + height + 'px';
+				modal.classList.remove ('visible');
+
+				setTimeout (function () {
+					modal.classList.add ('visible');
+
+					setTimeout (function () {
+						modal.style.top = '0px';
+
+						self.closeTimeout = setTimeout (function () {
+							self.Close ();
+						}, 4 * 1000);
+					}, 100);
+				}, 100);
+			},
+
+			/**
+			 * Close the modal using animation.
+			 */
+			Close: function () {
+				const modal = document.getElementById ('modal');
+
+				const height = modal.getBoundingClientRect ().height;
+				modal.style.top = '-' + height + 'px';
 			}
 		},
 
@@ -263,6 +313,16 @@ if (typeof TCH.Options === 'undefined') {
 						break;
 					case 'config-get-all':
 						this.Data.ExportData (message.data);
+						break;
+					case 'config-set-done':
+						if (message.key === 'pages') {
+							this.Modal.Open ('Pages saved');
+						} else if (message.key === 'page_settings') {
+							this.Modal.Open ('Page settings saved');
+						}
+						break;
+					case 'config-set-all-done':
+						this.Modal.Open ('Options imported from file');
 						break;
 					default:
 						throw Error ('Unsupported message by options script');

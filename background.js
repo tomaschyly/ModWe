@@ -159,9 +159,18 @@ if (typeof TCH.Background === 'undefined') {
 						break;
 					case 'config-set':
 						this.Config.Set (message.key, message.value);
+
+						browser.runtime.sendMessage ({
+							type: 'config-set-done',
+							key: message.key
+						});
 						break;
 					case 'config-set-all':
 						this.Config.SetAll (message.data);
+
+						browser.runtime.sendMessage ({
+							type: 'config-set-all-done'
+						});
 						break;
 					default:
 						throw Error ('Unsupported message by background script');

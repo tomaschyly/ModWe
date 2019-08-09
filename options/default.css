@@ -40,5 +40,15 @@ form textarea:focus { border-color: #ffd700; background: white; }
 .template { display: none; }
 
 #page-settings-panel { display: none; }
+#page-settings { position: relative; }
+#page-settings-panel .controls { position: absolute; top: 0; right: 0; }
+#page-settings-close-nosave { color: black; }
+#page-settings-close-nosave:hover,
+#page-settings-close-nosave:focus { color: red; }
 
 .CodeMirror { margin-bottom: 16px; }
+
+#modal { display: none; justify-content: center; position: fixed; left: 0; top: 0; right: 0; transition: top 0.4s linear; }
+#modal.visible { display: flex; }
+#modal .modal-content { display: block; width: 240px; height: auto; padding: 8px 8px 0 8px; border: 1px solid #ffd700; border-radius: 8px; margin-top: 8px; background: white; }
+#modal .modal-content p { margin-bottom: 8px; }

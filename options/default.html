@@ -48,6 +48,13 @@
 			<div class="panel" id="page-settings-panel">
 				<form id="page-settings">
 					<h2>Page Settings</h2>
+
+					<div class="controls">
+						<button type="button" id="page-settings-close-nosave" title="Close page settings without saving">
+							<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="times" class="svg-inline--fa fa-times fa-w-11" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path fill="currentColor" d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/></svg>
+						</button>
+					</div>
+
 					<input type="hidden" name="id" id="page-id" value=""/>
 					<label for="page-css">CSS</label>
 					<textarea name="page-css" id="page-css"></textarea>
@@ -56,6 +63,12 @@
 					<button type="submit">Save</button>
 					<button type="submit" id="page-settings-close">Save & Close</button>
 				</form>
+			</div>
+		</div>
+
+		<div id="modal">
+			<div class="modal-content">
+				<p>Lorem ipsum dotsum pop itok...</p>
 			</div>
 		</div>
 

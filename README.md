@@ -6,9 +6,11 @@ Usefull for Developers, you can add Pages for which you can write CSS and JS sni
 
 Both CSS and JS get inserted only after Page has been fully loaded. They are also inserted only on Pages that match RegExp which you write for them.
 
+This extension does not sync with your profile, instead you can export and import your options from the Options page.
+
 ## Installation
 
-1. Go [here](https://addons.mozilla.org/sk/firefox/addon/modwe/) and click Add to Firefox.
+1. Go [here](https://addons.mozilla.org/en-US/firefox/addon/modwe/) and click Add to Firefox.
 
 ## Important Notes
 

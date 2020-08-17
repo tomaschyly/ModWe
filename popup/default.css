@@ -39,3 +39,5 @@ form .input-checkbox { width: 100%; margin-bottom: 16px; }
 #navigate { width: 100%; margin-bottom: 4px; }
 
 #message.error { color: red; }
+
+#open-urls { display: block; width: calc(100% - 8px); height: 48px; resize: none; }

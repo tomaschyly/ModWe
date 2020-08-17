@@ -16,6 +16,8 @@ if (typeof TCH.Popup === 'undefined') {
 
 			document.getElementById ('navigate').addEventListener ('change', this.Navigate.bind (this));
 
+			document.getElementById ('open-urls').addEventListener ('keyup', this.OpenUrls.bind (this));
+
 			setTimeout (() => {
 				browser.runtime.sendMessage ({
 					type: 'config-get',
@@ -90,6 +92,32 @@ if (typeof TCH.Popup === 'undefined') {
 				}
 			} else {
 				this.Message ('<p>Selected page has no url associated.</p>', true);
+			}
+		},
+
+		/**
+		 * Open pasted urls in tabs.
+		 */
+		OpenUrls: function () {
+			const urls = document.getElementById ('open-urls').value;
+
+			if (urls.trim () !== '') {
+				let atLeastOne = false;
+				const urlsSplit = urls.trim ().split ("\n");
+
+				for (const url of urlsSplit) {
+					if (url !== '') {
+						browser.tabs.create ({
+							url: url
+						});
+
+						atLeastOne = true;
+					}
+				}
+
+				if (atLeastOne) {
+					window.close ();
+				}
 			}
 		},
 

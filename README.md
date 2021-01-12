@@ -1,6 +1,6 @@
 # ModWe
 
-FF extension to modify websites using custom CSS and JS snippets.
+Originally for Firefox (v1.x.x), now for browsers based on Chromium (v2.x.x) extension to modify websites using custom CSS and JS snippets.
 
 Usefull for Developers, you can add Pages for which you can write CSS and JS snippets wich will be injected into them. All of them are custom writen by you on the Options page.
 
@@ -10,7 +10,13 @@ This extension does not sync with your profile, instead you can export and impor
 
 ## Installation
 
+### Firefox (v1.x.x)
+
 1. Go [here](https://addons.mozilla.org/en-US/firefox/addon/modwe/) and click Add to Firefox.
+
+### Chrome (v2.x.x)
+
+*Coming soon*
 
 ## Important Notes
 

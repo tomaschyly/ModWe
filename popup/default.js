@@ -61,21 +61,20 @@ if (typeof TCH.Popup === 'undefined') {
 
 			if (url !== '') {
 				if (newTab) {
-					browser.tabs.create ({
+					chrome.tabs.create ({
 						url: url
 					});
 
 					window.close ();
 				} else {
-					browser.tabs.query ({
+					chrome.tabs.query ({
 						active: true,
 						currentWindow: true
-					})
-					.then (tabs => {
+					}, tabs => {
 						if (tabs.length > 0) {
 							const tab = tabs [0];
 
-							browser.tabs.update (tab.id, {
+							chrome.tabs.update (tab.id, {
 								url: url
 							});
 
@@ -83,11 +82,6 @@ if (typeof TCH.Popup === 'undefined') {
 						} else {
 							this.Message ('<p>You have no tab active.</p>', true);
 						}
-					})
-					.catch (error => {
-						console.error (error);
-
-						this.Message ('<p>Unable to navigate current tab.</p>', true);
 					});
 				}
 			} else {
@@ -107,7 +101,7 @@ if (typeof TCH.Popup === 'undefined') {
 
 				for (const url of urlsSplit) {
 					if (url !== '') {
-						browser.tabs.create ({
+						chrome.tabs.create ({
 							url: url
 						});
 

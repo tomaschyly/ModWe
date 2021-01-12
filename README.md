@@ -16,7 +16,9 @@ This extension does not sync with your profile, instead you can export and impor
 
 ### Chrome (v2.x.x)
 
-*Coming soon*
+1. Go [here](https://github.com/tomaschyly/ModWe/releases) and download latest archive.
+2. Unzip somewhere.
+3. In your browser go to extensions and with developer mode enabled load unpacked extension.
 
 ## Important Notes
 

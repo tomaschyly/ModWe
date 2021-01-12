@@ -37,7 +37,7 @@ if (typeof TCH.Options === 'undefined') {
 					params.add.addEventListener ('click', () => this.Add (params));
 
 					setTimeout (() => {
-						browser.runtime.sendMessage ({
+						chrome.runtime.sendMessage ({
 							type: 'config-get',
 							key: params.config.key,
 							identificator: dynamic.id
@@ -50,7 +50,7 @@ if (typeof TCH.Options === 'undefined') {
 			document.getElementById ('page-settings-close').addEventListener ('click', this.PageSettingsClose.bind (this));
 			document.getElementById ('page-settings-close-nosave').addEventListener ('click', this.PageSettingsClose.bind (this));
 
-			browser.runtime.onMessage.addListener (this.OnMessage.bind (this));
+			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
 		},
 
 		/**
@@ -153,7 +153,7 @@ if (typeof TCH.Options === 'undefined') {
 				});
 			});
 
-			browser.runtime.sendMessage ({
+			chrome.runtime.sendMessage ({
 				type: 'config-set',
 				key: params.config.key,
 				value: data
@@ -195,13 +195,13 @@ if (typeof TCH.Options === 'undefined') {
 							const data = JSON.parse (fileContents);
 
 							if (typeof data === 'object') {
-								browser.runtime.sendMessage ({
+								chrome.runtime.sendMessage ({
 									type: 'config-set-all',
 									data: data
 								});
 
 								setTimeout (() => {
-									browser.runtime.sendMessage ({
+									chrome.runtime.sendMessage ({
 										type: 'config-get',
 										key: 'pages',
 										identificator: 'pages'
@@ -220,7 +220,7 @@ if (typeof TCH.Options === 'undefined') {
 			 * Export options to file.
 			 */
 			Export: function () {
-				browser.runtime.sendMessage ({
+				chrome.runtime.sendMessage ({
 					type: 'config-get-all'
 				});
 			},
@@ -236,13 +236,13 @@ if (typeof TCH.Options === 'undefined') {
 					if (downloadDelta.id === downloadId && downloadDelta.state && downloadDelta.state.current === 'complete') {
 						URL.revokeObjectURL (dataUrl);
 
-						browser.downloads.onChanged.removeListener (onChangeListener);
+						chrome.downloads.onChanged.removeListener (onChangeListener);
 					}
 				};
 
 				const dataUrl = URL.createObjectURL (blob);
-				browser.downloads.onChanged.addListener (onChangeListener);
-				const downloadId = await browser.downloads.download ({
+				chrome.downloads.onChanged.addListener (onChangeListener);
+				const downloadId = await chrome.downloads.download ({
 					url: dataUrl,
 					filename: 'ModWe.json'
 				});
@@ -325,7 +325,7 @@ if (typeof TCH.Options === 'undefined') {
 						this.Modal.Open ('Options imported from file');
 						break;
 					default:
-						throw Error ('Unsupported message by options script');
+						throw Error ('Unsupported message (' + message.type + ') by options script');
 				}
 			}
 		},
@@ -338,7 +338,7 @@ if (typeof TCH.Options === 'undefined') {
 
 			const item = TCH.Utils.FindNearestParent (e.target, 'item');
 
-			browser.runtime.sendMessage ({
+			chrome.runtime.sendMessage ({
 				type: 'config-get',
 				key: 'page_settings',
 				identificator: item.dataset.id
@@ -412,7 +412,7 @@ if (typeof TCH.Options === 'undefined') {
 			this.pageSettings [id].css = document.getElementById ('page-css').value;
 			this.pageSettings [id].js = document.getElementById ('page-js').value;
 
-			browser.runtime.sendMessage ({
+			chrome.runtime.sendMessage ({
 				type: 'config-set',
 				key: 'page_settings',
 				value: this.pageSettings

@@ -14,15 +14,23 @@ if (typeof TCH.Background === 'undefined') {
 
 			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
 
-			chrome.runtime.onInstalled.addListener (() => {
-				chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
-					chrome.declarativeContent.onPageChanged.addRules ([
-						{
-							conditions: [new chrome.declarativeContent.PageStateMatcher({})],
-							actions: [new chrome.declarativeContent.ShowPageAction ()]
-						}
-					]);
-				});
+			// chrome.runtime.onInstalled.addListener (() => {
+			// 	chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
+			// 		chrome.declarativeContent.onPageChanged.addRules ([
+			// 			{
+			// 				conditions: [new chrome.declarativeContent.PageStateMatcher({})],
+			// 				actions: [new chrome.declarativeContent.ShowPageAction ()]
+			// 			}
+			// 		]);
+			// 	});
+			// });
+			chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
+				chrome.declarativeContent.onPageChanged.addRules ([
+					{
+						conditions: [new chrome.declarativeContent.PageStateMatcher({})],
+						actions: [new chrome.declarativeContent.ShowPageAction ()]
+					}
+				]);
 			});
 		},
 

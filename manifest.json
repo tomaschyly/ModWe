@@ -1,10 +1,5 @@
 {
 	"manifest_version": 2,
-	"applications": {
-		"gecko": {
-			"id": "modwe@tomas-chyly.com"
-		}
-	},
 	"name": "ModWe",
 	"version": "1.2.0",
 	"description": "Modify websites using custom CSS and JS snippets.",
@@ -13,6 +8,7 @@
 		"96": "icons/ic_dashboard_48dp_2x.png"
 	},
 	"permissions": [
+		"declarativeContent",
 		"<all_urls>",
 		"storage",
 		"activeTab",
@@ -22,14 +18,13 @@
 	"background": {
 		"scripts": ["background.js"]
 	},
-	"browser_action": {
+	"page_action": {
 		"default_icon": "icons/ic_dashboard_48dp_1x.png",
 		"default_title": "ModWe",
 		"default_popup": "popup/default.html"
 	},
 	"options_ui": {
 		"page": "options/default.html",
-		"browser_style": true,
 		"open_in_tab": true
 	}
 }

@@ -12,7 +12,7 @@ if (typeof TCH.Background === 'undefined') {
 
 			this.ContentScripts.Init ();
 
-			browser.runtime.onMessage.addListener (this.OnMessage.bind (this));
+			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
 		},
 
 		Config: {
@@ -23,16 +23,10 @@ if (typeof TCH.Background === 'undefined') {
 			 */
 			Init: function () {
 				return new Promise ((resolve, reject) => {
-					browser.storage.local.get (['enabled', 'pages', 'page_settings'])
-					.then (response => {
+					chrome.storage.local.get (['enabled', 'pages', 'page_settings'], response => {
 						this.data = response;
 
 						resolve ();
-					})
-					.catch (error => {
-						console.error (error);
-
-						reject ();
 					});
 				});
 			},
@@ -61,7 +55,7 @@ if (typeof TCH.Background === 'undefined') {
 			Set: function (key, value) {
 				this.data [key] = value;
 
-				browser.storage.local.set (this.data);
+				chrome.storage.local.set (this.data);
 			},
 
 			/**
@@ -70,7 +64,7 @@ if (typeof TCH.Background === 'undefined') {
 			SetAll: function (data) {
 				this.data = data;
 
-				browser.storage.local.set (this.data);
+				chrome.storage.local.set (this.data);
 			}
 		},
 
@@ -83,8 +77,8 @@ if (typeof TCH.Background === 'undefined') {
 					properties: ['status']
 				};
 
-				if (!browser.tabs.onUpdated.hasListener (this.OnTabUpdate.bind (this), listenerParams)) {
-					browser.tabs.onUpdated.addListener (this.OnTabUpdate.bind (this), listenerParams);
+				if (!chrome.tabs.onUpdated.hasListener (this.OnTabUpdate.bind (this)/* , listenerParams */)) {
+					chrome.tabs.onUpdated.addListener (this.OnTabUpdate.bind (this)/* , listenerParams */);
 				}
 			},
 
@@ -107,13 +101,13 @@ if (typeof TCH.Background === 'undefined') {
 									
 									if (settings !== null) {
 										if (typeof settings.css === 'string' && settings.css !== '') {
-											browser.tabs.insertCSS (tabId, {
+											chrome.tabs.insertCSS (tabId, {
 												code: settings.css
 											});
 										}
 
 										if (typeof settings.js === 'string' && settings.js !== '') {
-											browser.tabs.executeScript (tabId, {
+											chrome.tabs.executeScript (tabId, {
 												code: settings.js
 											});
 										}
@@ -144,7 +138,7 @@ if (typeof TCH.Background === 'undefined') {
 			if (typeof message.type !== 'undefined') {
 				switch (message.type) {
 					case 'config-get':
-						browser.runtime.sendMessage ({
+						chrome.runtime.sendMessage ({
 							type: 'config-get',
 							key: message.key,
 							value: this.Config.Get (message.key),
@@ -152,7 +146,7 @@ if (typeof TCH.Background === 'undefined') {
 						});
 						break;
 					case 'config-get-all':
-						browser.runtime.sendMessage ({
+						chrome.runtime.sendMessage ({
 							type: 'config-get-all',
 							data: this.Config.GetAll ()
 						});
@@ -160,7 +154,7 @@ if (typeof TCH.Background === 'undefined') {
 					case 'config-set':
 						this.Config.Set (message.key, message.value);
 
-						browser.runtime.sendMessage ({
+						chrome.runtime.sendMessage ({
 							type: 'config-set-done',
 							key: message.key
 						});
@@ -168,7 +162,7 @@ if (typeof TCH.Background === 'undefined') {
 					case 'config-set-all':
 						this.Config.SetAll (message.data);
 
-						browser.runtime.sendMessage ({
+						chrome.runtime.sendMessage ({
 							type: 'config-set-all-done'
 						});
 						break;

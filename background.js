@@ -13,6 +13,17 @@ if (typeof TCH.Background === 'undefined') {
 			this.ContentScripts.Init ();
 
 			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
+
+			chrome.runtime.onInstalled.addListener (() => {
+				chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
+					chrome.declarativeContent.onPageChanged.addRules ([
+						{
+							conditions: [new chrome.declarativeContent.PageStateMatcher({})],
+							actions: [new chrome.declarativeContent.ShowPageAction ()]
+						}
+					]);
+				});
+			});
 		},
 
 		Config: {
@@ -167,7 +178,7 @@ if (typeof TCH.Background === 'undefined') {
 						});
 						break;
 					default:
-						throw Error ('Unsupported message by background script');
+						throw Error ('Unsupported message (' + message.type + ') by background script');
 				}
 			}
 		}

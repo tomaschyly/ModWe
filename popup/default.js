@@ -19,18 +19,18 @@ if (typeof TCH.Popup === 'undefined') {
 			document.getElementById ('open-urls').addEventListener ('keyup', this.OpenUrls.bind (this));
 
 			setTimeout (() => {
-				browser.runtime.sendMessage ({
+				chrome.runtime.sendMessage ({
 					type: 'config-get',
 					key: 'enabled'
 				});
 
-				browser.runtime.sendMessage ({
+				chrome.runtime.sendMessage ({
 					type: 'config-get',
 					key: 'pages'
 				});
 			}, 1);
 
-			browser.runtime.onMessage.addListener (this.OnMessage.bind (this));
+			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
 		},
 
 		/**
@@ -156,7 +156,7 @@ if (typeof TCH.Popup === 'undefined') {
 						}
 						break;
 					default:
-						throw Error ('Unsupported message by popup script');
+						throw Error ('Unsupported message (' + message.type + ') by popup script');
 				}
 			}
 		},
@@ -165,7 +165,7 @@ if (typeof TCH.Popup === 'undefined') {
 		 * Open options page.
 		 */
 		Options: function () {
-			browser.runtime.openOptionsPage ();
+			chrome.runtime.openOptionsPage ();
 
 			window.close ();
 		},
@@ -185,7 +185,7 @@ if (typeof TCH.Popup === 'undefined') {
 				button.textContent = 'Disabled';
 			}
 
-			browser.runtime.sendMessage ({
+			chrome.runtime.sendMessage ({
 				type: 'config-set',
 				key: 'enabled',
 				value: this.enabled ? 1 : 0

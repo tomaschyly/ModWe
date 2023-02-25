@@ -13,44 +13,52 @@ if (typeof TCH.Options === 'undefined') {
 		 * Options initialization.
 		 */
 		Init: function () {
-			this.Data.Init ();
+            this.Data.Init ();
 
-			const dynamic = document.querySelectorAll ('.dynamic');
+            const dynamic = document.querySelectorAll ('.dynamic');
 
-			for (let i = 0; i < dynamic.length; i++) {
-				(dynamic => {
-					const params = {
-						id: dynamic.id,
-						container: dynamic,
-						items: dynamic.querySelector ('.items'),
-						template: dynamic.querySelector ('.template'),
-						add: dynamic.querySelector ('.add'),
-						config: {
-							key: dynamic.dataset.key
-						}
-					};
+            for (let i = 0; i < dynamic.length; i++) {
+                (dynamic => {
+                    const params = {
+                        id: dynamic.id,
+                        container: dynamic,
+                        items: dynamic.querySelector ('.items'),
+                        template: dynamic.querySelector ('.template'),
+                        add: dynamic.querySelector ('.add'),
+                        config: {
+                            key: dynamic.dataset.key
+                        }
+                    };
 
-					this.dynamicParams [dynamic.id] = params;
+                    this.dynamicParams [dynamic.id] = params;
 
-					params.template.parentNode.removeChild (params.template);
+                    params.template.parentNode.removeChild (params.template);
 
-					params.add.addEventListener ('click', () => this.Add (params));
+                    params.add.addEventListener ('click', () => this.Add (params));
 
-					setTimeout (() => {
-						chrome.runtime.sendMessage ({
-							type: 'config-get',
-							key: params.config.key,
-							identificator: dynamic.id
-						});
-					}, 1);
-				}) (dynamic [i]);
-			}
+                    setTimeout (() => {
+                        chrome.runtime.sendMessage ({
+                            type: 'config-get',
+                            key: params.config.key,
+                            identificator: dynamic.id
+                        });
+                        }, 1);
+                }) (dynamic [i]);
+            }
 
-			document.getElementById ('page-settings').addEventListener ('submit', this.PageSettingsSave.bind (this));
-			document.getElementById ('page-settings-close').addEventListener ('click', this.PageSettingsClose.bind (this));
-			document.getElementById ('page-settings-close-nosave').addEventListener ('click', this.PageSettingsClose.bind (this));
+            document.getElementById ('page-settings').addEventListener ('submit', this.PageSettingsSave.bind (this));
+            document.getElementById ('page-settings-close').addEventListener ('click', this.PageSettingsClose.bind (this));
+            document.getElementById ('page-settings-close-nosave').addEventListener ('click', this.PageSettingsClose.bind (this));
 
-			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
+            document.getElementById ('general-save').addEventListener ('click', this.GeneralSave.bind (this));
+
+            setTimeout (() => {
+                chrome.runtime.sendMessage ({
+                    type: 'config-get-general',
+                });
+            }, 1);
+
+            chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
 		},
 
 		/**
@@ -324,6 +332,9 @@ if (typeof TCH.Options === 'undefined') {
 					case 'config-set-all-done':
 						this.Modal.Open ('Options imported from file');
 						break;
+                    case 'config-get-general':
+                        this.GeneralInit (message.value);
+                        break;
 					default:
 						throw Error ('Unsupported message (' + message.type + ') by options script');
 				}
@@ -426,7 +437,28 @@ if (typeof TCH.Options === 'undefined') {
 			const panel = document.getElementById ('page-settings-panel');
 
 			panel.style.display = 'none';
-		}
+		},
+
+        /**
+         * Init general settings.
+         */
+        GeneralInit: function (value) {
+            document.getElementById ('search').value = value.search || '';
+        },
+
+        /**
+         * Save general settings.
+         */
+        GeneralSave: function () {
+            var search = document.getElementById ('search').value;
+
+            chrome.runtime.sendMessage ({
+                type: 'config-set-general',
+                value: {
+                    search: search
+                }
+            });
+        }
 	};
 
 	TCH.Options.Init ();

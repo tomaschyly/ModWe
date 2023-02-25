@@ -42,7 +42,7 @@ if (typeof TCH.Background === 'undefined') {
 			 */
 			Init: function () {
 				return new Promise ((resolve, reject) => {
-					chrome.storage.local.get (['enabled', 'pages', 'page_settings'], response => {
+                    chrome.storage.local.get (['enabled', 'pages', 'page_settings', 'general'], response => {
 						this.data = response;
 
 						resolve ();
@@ -185,6 +185,21 @@ if (typeof TCH.Background === 'undefined') {
 							type: 'config-set-all-done'
 						});
 						break;
+                    case 'config-get-general':
+                        var general = this.Config.Get ('general');
+
+                        chrome.runtime.sendMessage ({
+                            type: 'config-get-general',
+                            value: general ? JSON.parse (general) : {}
+                        });
+                        break;
+                    case 'config-set-general':
+                        this.Config.Set ('general', JSON.stringify (message.value || {}));
+
+						chrome.runtime.sendMessage ({
+                            type: 'config-set-general-done'
+						});
+                        break;
 					default:
 						throw Error ('Unsupported message (' + message.type + ') by background script');
 				}

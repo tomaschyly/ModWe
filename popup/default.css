@@ -17,6 +17,14 @@ button:focus { outline: none; }
 form select { width: 100%; margin-bottom: 16px; }
 form .input-checkbox { width: 100%; margin-bottom: 16px; }
 
+.input-button { display: flex; flex-direction: row; width: 100%; }
+
+.search-button { width: 48px; height: 32px; border-radius: 48px; }
+.search-button svg { width: 24px; color: black; transition: color 0.4s linear; }
+.search-button:hover svg { color: white; }
+.input-button .text-input { flex: 5; box-sizing: border-box; height: 32px; }
+.input-button .search-button { flex: 1; margin-left: 4px; }
+
 #browser-popup { display: flex; flex-direction: column; flex: 1 0 auto; }
 
 .navigation { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #ffd700; }
@@ -36,8 +44,10 @@ form .input-checkbox { width: 100%; margin-bottom: 16px; }
 #toggle-enabled.enabled:hover,
 #toggle-enabled.enabled:focus { border-color: black; color: black; background: green; }
 
-#navigate { width: 100%; margin-bottom: 4px; }
+#navigate { width: 100%; margin-bottom: 16px; }
 
 #message.error { color: red; }
 
-#open-urls { display: block; width: calc(100% - 8px); height: 48px; resize: none; }
+#open-urls { display: block; width: calc(100% - 8px); height: 48px; resize: none; margin-bottom: 16px; }
+
+#delimiter { display: block; width: 100%; border-bottom: 1px dashed black; margin-bottom: 16px; }

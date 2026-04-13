@@ -1,4 +1,6 @@
-# Timoty Web Portal — Agent Instructions
+# ModWe — Agent Instructions
+
+ModWe is a Chromium browser extension that modifies websites using user-defined CSS and JS snippets.
 
 These instructions apply to the whole repository unless a deeper `AGENTS.md` overrides them.
 
@@ -32,9 +34,9 @@ These instructions apply to the whole repository unless a deeper `AGENTS.md` ove
 
 ### Helpers and services architecture
 
-- Keep generic helpers in `src/service/`
-- Keep helpers inside component files only when they are used exclusively by that component
-- Write services in a functional, stateless style (function-based utilities), not OOP-style service classes with internal state
+- Keep shared helpers in `service/` or `utils.js`
+- Keep feature-specific logic in its context (`background.js`, `popup/`, `options/`)
+- Prefer functional, stateless utilities over OOP-style service classes with internal state
 
 ### TODO ownership format
 
@@ -58,13 +60,14 @@ These instructions apply to the whole repository unless a deeper `AGENTS.md` ove
 
 ### Validation
 
-- After finishing code changes, run ESLint checks and resolve issues introduced by your changes before handoff.
-- Prefer targeting linting to changed files first (for example `npx eslint src/path/a.tsx src/path/b.tsx`) unless there is a clear reason to run it on the whole project.
+- After finishing code changes, run available project checks and resolve issues introduced by your changes before handoff.
+- If lint tooling is available, prefer targeted checks for changed files first.
+- For manifest changes, verify `manifest.json` stays valid JSON and `version` follows Chromium extension rules.
 
 ### Handoff summary format
 
 - After code changes and validation, include a short summary of changed files in your final response.
 - Use plain text (non-clickable) project-relative file references only.
-- For each relevant change block, include the starting line number using the `path:line` format (for example `src/ui/components/devices/DeviceForm.tsx:890`).
+- For each relevant change block, include the starting line number using the `path:line` format (for example `options/default.js:120`).
 - Do not use markdown file links for handoff file references.
 - Keep this summary concise and focused on user-impacting or logic-impacting edits.

@@ -184,7 +184,7 @@ if (typeof TCH.Popup === 'undefined') {
 				switch (message.type) {
 					case 'config-get':
 						if (message.key === 'enabled' && message.value !== null) {
-							this.enabled = message.value === 1 ? true : false;
+							this.enabled = message.value === 1;
 
 							if (this.enabled) {
 								this.ToggleEnabled (true);

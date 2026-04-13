@@ -24,19 +24,29 @@
 				</div>
 			</div>
 
+			<div class="panel">
+				<button type="button" id="toggle-enabled">Disabled</button>
+			</div>
+
 			<div class="panel import-area">
 				<form id="import-form">
 					<input type="file" id="import-file" accept="application/json"/>
 				</form>
 			</div>
 
-            <div class="panel">
-                <form id="form-general">
-                    <input class="text-input" id="search" type="text" value="" placeholder="Search url"/>
+			<div class="panel">
+				<form id="form-general">
+					<label for="searches">Search URLs</label>
+					<textarea class="text-input" id="searches" placeholder="https://www.google.com/search?q=
+https://duckduckgo.com/?q="></textarea>
+					<p class="field-hint">
+						Add one search URL prefix per line, ending where the query should be inserted.
+						Example: <code>https://www.google.com/search?q=</code>. In popup, pick any search URL and the query is appended automatically.
+					</p>
 
 					<button type="button" class="save" id="general-save">Save</button>
-                </form>
-            </div>
+				</form>
+			</div>
 
 			<div class="panel">
 				<form id="pages" class="dynamic" data-key="pages">
@@ -83,6 +93,8 @@
 		<script src="../lib/codemirror.js"></script>
 		<script src="../lib/codemirror/mode/css/css.js"></script>
 		<script src="../lib/codemirror/mode/javascript/javascript.js"></script>
+		<script src="../service/runtime.js"></script>
+		<script src="../service/config.js"></script>
 		<script src="../utils.js"></script>
 		<script src="default.js"></script>
 	</body>

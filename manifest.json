@@ -1,7 +1,7 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "ModWe",
-	"version": "2.1.0",
+	"version": "2.2.0",
 	"description": "Modify websites using custom CSS and JS snippets.",
 	"icons": {
 		"48": "icons/ic_dashboard_48dp_1x.png",
@@ -9,16 +9,20 @@
 	},
 	"permissions": [
 		"declarativeContent",
-		"<all_urls>",
 		"storage",
 		"activeTab",
 		"tabs",
-		"downloads"
+		"downloads",
+		"scripting",
+		"userScripts"
+	],
+	"host_permissions": [
+		"<all_urls>"
 	],
 	"background": {
-		"scripts": ["background.js"]
+		"service_worker": "background.js"
 	},
-	"page_action": {
+	"action": {
 		"default_icon": "icons/ic_dashboard_48dp_1x.png",
 		"default_title": "ModWe",
 		"default_popup": "popup/default.html"

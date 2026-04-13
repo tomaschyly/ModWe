@@ -151,6 +151,12 @@ form textarea {
 
 .template { display: none; }
 
+#pages .item .position {
+	min-width: 72px;
+	width: 72px;
+	text-align: center;
+}
+
 #form-general #searches {
 	display: block;
 	width: 100%;

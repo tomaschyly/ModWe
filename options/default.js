@@ -108,6 +108,8 @@ function initItems(params, data) {
 			addItem(params, data [i]);
 		}
 	}
+
+	updateItemPositions(params);
 }
 
 /**
@@ -124,7 +126,16 @@ function cloneItem(params) {
 	newClone.querySelector('.page-settings').addEventListener('click', e => openPageSettings(e, params));
 	newClone.querySelector('.remove').addEventListener('click', e => removeItem(e, params));
 
+	const positionInput = newClone.querySelector('.position');
+	if (positionInput !== null) {
+		positionInput.addEventListener('change', e => moveItemToPosition(e, params));
+	}
+
 	forEachNode(newClone.querySelectorAll('input'), element => {
+		if (element.classList.contains('position')) {
+			return;
+		}
+
 		element.addEventListener('change', () => saveItems(params));
 	});
 
@@ -155,6 +166,7 @@ function addItem(params, data) {
 		newClone.querySelector('.name').value = data.name;
 		newClone.querySelector('.url').value = data.url;
 		newClone.querySelector('.regexp').value = data.regexp;
+		updateItemPositions(params);
 		return;
 	}
 
@@ -162,6 +174,7 @@ function addItem(params, data) {
 		params.add.disabled = false;
 	}, 400);
 
+	updateItemPositions(params);
 	saveItems(params);
 }
 
@@ -184,6 +197,75 @@ function removeItem(e, params) {
 	}
 
 	item.parentNode.removeChild(item);
+	updateItemPositions(params);
+	saveItems(params);
+}
+
+/**
+ * Recalculate and display positions for all item rows.
+ * @param {Object} params Dynamic form params.
+ */
+function updateItemPositions(params) {
+	const itemNodes = params.items.querySelectorAll('.item');
+	const maxPosition = Math.max(0, itemNodes.length - 1);
+
+	forEachNode(itemNodes, (element, index) => {
+		const positionInput = element.querySelector('.position');
+		if (positionInput === null) {
+			return;
+		}
+
+		positionInput.min = '0';
+		positionInput.max = '' + maxPosition;
+		positionInput.value = '' + index;
+	});
+}
+
+/**
+ * Move one item based on entered position and persist new order.
+ * @param {Event} e Position input change event.
+ * @param {Object} params Dynamic form params.
+ */
+function moveItemToPosition(e, params) {
+	const item = findNearestParent(e.target, 'item');
+	if (item === null) {
+		return;
+	}
+
+	const itemNodes = params.items.querySelectorAll('.item');
+	const maxPosition = itemNodes.length - 1;
+	if (maxPosition < 0) {
+		return;
+	}
+
+	let currentPosition = -1;
+	forEachNode(itemNodes, (element, index) => {
+		if (element === item) {
+			currentPosition = index;
+		}
+	});
+
+	if (currentPosition < 0) {
+		return;
+	}
+
+	let requestedPosition = parseInt(e.target.value, 10);
+	if (isNaN(requestedPosition)) {
+		requestedPosition = currentPosition;
+	}
+	requestedPosition = Math.max(0, requestedPosition);
+	requestedPosition = Math.min(requestedPosition, maxPosition);
+
+	if (requestedPosition !== currentPosition) {
+		const targetItem = itemNodes [requestedPosition];
+		if (requestedPosition > currentPosition) {
+			params.items.insertBefore(item, targetItem.nextSibling);
+		} else {
+			params.items.insertBefore(item, targetItem);
+		}
+	}
+
+	updateItemPositions(params);
 	saveItems(params);
 }
 

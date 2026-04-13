@@ -26,7 +26,7 @@ body {
 	font-size: 18px;
 	line-height: 1.2;
 	font-family: Kalam, Consolas, "Courier New", monospace;
-	background: linear-gradient(180deg, var(--mw-primary-dark) 0%, var(--mw-primary) 100%);
+	background: var(--mw-primary-dark);
 }
 
 * { box-sizing: border-box; }

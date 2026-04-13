@@ -89,7 +89,7 @@ if (typeof TCH.Options === 'undefined') {
 
 			newClone.querySelector ('.remove').addEventListener ('click', e => this.Remove (e, params));
 
-			TCH.Utils.NodeListFunc (newClone.querySelectorAll ('input'), element => element.addEventListener ('change', () => this.Save (params)));
+			forEachNode (newClone.querySelectorAll ('input'), element => element.addEventListener ('change', () => this.Save (params)));
 
 			return newClone;
 		},
@@ -129,7 +129,7 @@ if (typeof TCH.Options === 'undefined') {
 		 * Remove item.
 		 */
 		Remove: function (e, params) {
-			const item = TCH.Utils.FindNearestParent (e.target, 'item');
+			const item = findNearestParent (e.target, 'item');
 
 			const panel = document.getElementById ('page-settings-panel');
 			if (panel.style.display !== 'none') {
@@ -152,7 +152,7 @@ if (typeof TCH.Options === 'undefined') {
 		Save: function (params) {
 			const data = [];
 
-			TCH.Utils.NodeListFunc (params.container.querySelectorAll ('.item'), element => {
+			forEachNode (params.container.querySelectorAll ('.item'), element => {
 				data.push ({
 					id: element.dataset.id,
 					name: element.querySelector ('.name').value,
@@ -347,7 +347,7 @@ if (typeof TCH.Options === 'undefined') {
 		PageSettings: function (e, params) {
 			const panel = document.getElementById ('page-settings-panel');
 
-			const item = TCH.Utils.FindNearestParent (e.target, 'item');
+			const item = findNearestParent (e.target, 'item');
 
 			chrome.runtime.sendMessage ({
 				type: 'config-get',

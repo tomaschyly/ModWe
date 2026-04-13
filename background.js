@@ -1,3 +1,5 @@
+importScripts('service/runtime.js');
+
 /**
  * Local cache for values from chrome.storage.
  * @type {Object}
@@ -5,26 +7,60 @@
 const configData = {};
 
 /**
- * Background initialization.
+ * Keys used by extension config.
+ * @type {Array<string>}
  */
-async function initBackground() {
-	await initConfig();
-	initContentScripts();
+const configKeys = ['enabled', 'pages', 'page_settings', 'general'];
+
+/**
+ * Promise used to avoid duplicate storage loads.
+ * @type {Promise<void>|null}
+ */
+let configLoadPromise = null;
+
+/**
+ * Cached runtime availability of userScripts API.
+ * @type {boolean|null}
+ */
+let userScriptsEnabled = null;
+
+/**
+ * Ensure user-scripts warning is logged only once.
+ * @type {boolean}
+ */
+let userScriptsWarningLogged = false;
+
+/**
+ * Register background listeners and start async init.
+ */
+function initBackground() {
 	addRuntimeMessageListener(onRuntimeMessage);
+
+	if (!chrome.tabs.onUpdated.hasListener(onTabUpdate)) {
+		chrome.tabs.onUpdated.addListener(onTabUpdate);
+	}
+
 	initPageActionRules();
+	ensureConfigLoaded();
 }
 
 /**
- * Load configuration from extension storage.
+ * Ensure config cache is loaded before read operations.
  * @returns {Promise<void>}
  */
-function initConfig() {
-	return new Promise(resolve => {
-		chrome.storage.local.get(['enabled', 'pages', 'page_settings', 'general'], response => {
+function ensureConfigLoaded() {
+	if (configLoadPromise !== null) {
+		return configLoadPromise;
+	}
+
+	configLoadPromise = new Promise(resolve => {
+		chrome.storage.local.get(configKeys, response => {
 			Object.assign(configData, response || {});
 			resolve();
 		});
 	});
+
+	return configLoadPromise;
 }
 
 /**
@@ -74,48 +110,47 @@ function setAllConfig(data) {
 }
 
 /**
- * Register content script injection listener.
- */
-function initContentScripts() {
-	if (!chrome.tabs.onUpdated.hasListener(onTabUpdate)) {
-		chrome.tabs.onUpdated.addListener(onTabUpdate);
-	}
-}
-
-/**
  * Handle updated tabs and execute page-specific CSS/JS.
  * @param {number} tabId Updated tab id.
  * @param {Object} changeInfo Tab update info.
  * @param {Object} tab Updated tab.
  */
 function onTabUpdate(tabId, changeInfo, tab) {
-	if (changeInfo.status !== 'complete' || getConfig('enabled') !== 1) {
+	if (changeInfo.status !== 'complete') {
 		return;
 	}
 
-	const pages = Array.isArray(getConfig('pages')) ? getConfig('pages') : [];
-	if (pages.length === 0) {
-		return;
-	}
-
-	const url = typeof tab.url === 'string' ? tab.url : '';
-
-	for (let i = 0; i < pages.length; i++) {
-		const page = pages [i];
-		if (typeof page.regexp !== 'string' || page.regexp === '') {
-			continue;
+	ensureConfigLoaded().then(async () => {
+		if (getConfig('enabled') !== 1) {
+			return;
 		}
 
-		const regexp = createRegExp(page.regexp);
-		if (regexp === null) {
-			continue;
+		const pages = Array.isArray(getConfig('pages')) ? getConfig('pages') : [];
+		if (pages.length === 0) {
+			return;
 		}
 
-		if (regexp.test(url)) {
-			applyPageSettings(tabId, getPageSettings(page.id));
-			break;
+		const url = typeof tab.url === 'string' ? tab.url : '';
+
+		for (let i = 0; i < pages.length; i++) {
+			const page = pages [i];
+			if (typeof page.regexp !== 'string' || page.regexp === '') {
+				continue;
+			}
+
+			const regexp = createRegExp(page.regexp);
+			if (regexp === null) {
+				continue;
+			}
+
+			if (regexp.test(url)) {
+				await applyPageSettings(tabId, getPageSettings(page.id));
+				break;
+			}
 		}
-	}
+	}).catch(() => {
+		// Keep behavior resilient, same as previous fire-and-forget approach.
+	});
 }
 
 /**
@@ -149,23 +184,124 @@ function getPageSettings(id) {
  * Apply CSS and JS settings for one tab.
  * @param {number} tabId Target tab id.
  * @param {Object|null} settings Page settings.
+ * @returns {Promise<void>}
  */
-function applyPageSettings(tabId, settings) {
+async function applyPageSettings(tabId, settings) {
 	if (settings === null || typeof settings !== 'object') {
 		return;
 	}
 
 	if (typeof settings.css === 'string' && settings.css !== '') {
-		chrome.tabs.insertCSS(tabId, {
-			code: settings.css
-		});
+		await insertCss(tabId, settings.css);
 	}
 
 	if (typeof settings.js === 'string' && settings.js !== '') {
-		chrome.tabs.executeScript(tabId, {
-			code: settings.js
-		});
+		await executeJs(tabId, settings.js);
 	}
+}
+
+/**
+ * Insert CSS into tab using MV3 scripting API.
+ * @param {number} tabId Target tab id.
+ * @param {string} css CSS source.
+ * @returns {Promise<void>}
+ */
+async function insertCss(tabId, css) {
+	try {
+		await chrome.scripting.insertCSS({
+			target: {
+				tabId: tabId
+			},
+			css: css
+		});
+	} catch (error) {
+		// Keep silent to preserve previous behavior of ignored injection failures.
+	}
+}
+
+/**
+ * Execute JS with best available MV3-compatible method.
+ * @param {number} tabId Target tab id.
+ * @param {string} code JavaScript source.
+ * @returns {Promise<void>}
+ */
+async function executeJs(tabId, code) {
+	const usedUserScripts = await executeWithUserScripts(tabId, code);
+	if (usedUserScripts) {
+		return;
+	}
+
+	logUserScriptsUnavailable();
+}
+
+/**
+ * Check whether userScripts API is available and enabled.
+ * @returns {Promise<boolean>}
+ */
+async function isUserScriptsEnabled() {
+	if (userScriptsEnabled !== null) {
+		return userScriptsEnabled;
+	}
+
+	if (typeof chrome.userScripts === 'undefined' || typeof chrome.userScripts.getScripts !== 'function') {
+		userScriptsEnabled = false;
+		return userScriptsEnabled;
+	}
+
+	try {
+		await chrome.userScripts.getScripts();
+		userScriptsEnabled = true;
+	} catch (error) {
+		userScriptsEnabled = false;
+	}
+
+	return userScriptsEnabled;
+}
+
+/**
+ * Execute JS using userScripts API (preferred for arbitrary user code).
+ * @param {number} tabId Target tab id.
+ * @param {string} code JavaScript source.
+ * @returns {Promise<boolean>}
+ */
+async function executeWithUserScripts(tabId, code) {
+	if (typeof chrome.userScripts === 'undefined' || typeof chrome.userScripts.execute !== 'function') {
+		return false;
+	}
+
+	const enabled = await isUserScriptsEnabled();
+	if (!enabled) {
+		return false;
+	}
+
+	try {
+		await chrome.userScripts.execute({
+			target: {
+				tabId: tabId
+			},
+			js: [
+				{
+					code: code
+				}
+			]
+		});
+		return true;
+	} catch (error) {
+		userScriptsEnabled = false;
+		return false;
+	}
+}
+
+/**
+ * Log one-time warning when user script execution is unavailable.
+ */
+function logUserScriptsUnavailable() {
+	if (userScriptsWarningLogged) {
+		return;
+	}
+
+	userScriptsWarningLogged = true;
+	console.warn('ModWe: User JS execution requires chrome.userScripts. Enable "Allow User Scripts" for this extension.');
 }
 
 /**
@@ -194,6 +330,18 @@ function onRuntimeMessage(message) {
 		return;
 	}
 
+	ensureConfigLoaded().then(() => {
+		handleRuntimeMessage(message);
+	}).catch(() => {
+		// Ignore to keep message loop robust.
+	});
+}
+
+/**
+ * Process one runtime message after config is loaded.
+ * @param {Object} message Runtime message.
+ */
+function handleRuntimeMessage(message) {
 	switch (message.type) {
 		case 'config-get':
 			sendRuntimeMessage({
@@ -240,14 +388,14 @@ function onRuntimeMessage(message) {
 }
 
 /**
- * Configure page action rules.
+ * Configure extension action visibility rules.
  */
 function initPageActionRules() {
 	chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
 		chrome.declarativeContent.onPageChanged.addRules([
 			{
 				conditions: [new chrome.declarativeContent.PageStateMatcher({})],
-				actions: [new chrome.declarativeContent.ShowPageAction()]
+				actions: [new chrome.declarativeContent.ShowAction()]
 			}
 		]);
 	});

@@ -45,6 +45,137 @@ function initBackground() {
 }
 
 /**
+ * Compare two string arrays for equality.
+ * @param {Array<string>} left First array.
+ * @param {Array<string>} right Second array.
+ * @returns {boolean}
+ */
+function areStringArraysEqual(left, right) {
+	if (left.length !== right.length) {
+		return false;
+	}
+
+	for (let i = 0; i < left.length; i++) {
+		if (left [i] !== right [i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Normalize search URL list by trimming values and removing empty items.
+ * @param {Array|*} value Raw search URL list.
+ * @returns {Array<string>}
+ */
+function normalizeSearchUrls(value) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	const urls = [];
+	for (let i = 0; i < value.length; i++) {
+		if (typeof value [i] !== 'string') {
+			continue;
+		}
+
+		const trimmed = value [i].trim();
+		if (trimmed !== '') {
+			urls.push(trimmed);
+		}
+	}
+
+	return urls;
+}
+
+/**
+ * Normalize last selected search URL value.
+ * @param {*} value Raw last selected search URL.
+ * @returns {string}
+ */
+function normalizeSearchLast(value) {
+	if (typeof value !== 'string') {
+		return '';
+	}
+
+	const trimmed = value.trim();
+	return trimmed !== '' ? trimmed : '';
+}
+
+/**
+ * Normalize general settings object to current schema.
+ * @param {*} value Raw general settings.
+ * @returns {Object}
+ */
+function normalizeGeneralConfig(value) {
+	const parsed = parseGeneralConfig(value);
+	const searches = normalizeSearchUrls(parsed.searches);
+	let searchLast = normalizeSearchLast(parsed.search_last);
+
+	if (searches.indexOf(searchLast) === -1) {
+		searchLast = '';
+	}
+
+	return {
+		searches: searches,
+		searches_migrated: parsed.searches_migrated === 1 || parsed.searches_migrated === true ? 1 : 0,
+		search_last: searchLast
+	};
+}
+
+/**
+ * Migrate general settings from legacy schema.
+ * @param {*} value Raw general settings.
+ * @returns {{value: Object, changed: boolean}}
+ */
+function migrateGeneralConfig(value) {
+	const parsed = parseGeneralConfig(value);
+	const normalized = normalizeGeneralConfig(parsed);
+
+	let searches = normalized.searches.slice();
+	if (normalized.searches_migrated !== 1 && searches.length === 0 && typeof parsed.search === 'string') {
+		const legacySearch = parsed.search.trim();
+		if (legacySearch !== '') {
+			searches = [legacySearch];
+		}
+	}
+
+	const searchLast = searches.indexOf(normalized.search_last) !== -1
+		? normalized.search_last
+		: (searches.length === 1 ? searches [0] : '');
+
+	const migrated = {
+		searches: searches,
+		searches_migrated: 1,
+		search_last: searchLast
+	};
+
+	return {
+		value: migrated,
+		changed: normalized.searches_migrated !== migrated.searches_migrated
+			|| !areStringArraysEqual(normalized.searches, migrated.searches)
+			|| normalized.search_last !== migrated.search_last
+			|| typeof parsed.search !== 'undefined'
+			|| typeof value !== 'string'
+	};
+}
+
+/**
+ * Ensure cached general settings are migrated and serialized.
+ * @returns {boolean}
+ */
+function ensureGeneralConfigMigrated() {
+	const migration = migrateGeneralConfig(configData.general);
+	if (!migration.changed) {
+		return false;
+	}
+
+	configData.general = JSON.stringify(migration.value);
+	return true;
+}
+
+/**
  * Ensure config cache is loaded before read operations.
  * @returns {Promise<void>}
  */
@@ -56,6 +187,11 @@ function ensureConfigLoaded() {
 	configLoadPromise = new Promise(resolve => {
 		chrome.storage.local.get(configKeys, response => {
 			Object.assign(configData, response || {});
+
+			if (ensureGeneralConfigMigrated()) {
+				chrome.storage.local.set(configData);
+			}
+
 			resolve();
 		});
 	});
@@ -105,6 +241,7 @@ function setAllConfig(data) {
 		delete configData [key];
 	});
 	Object.assign(configData, newData);
+	ensureGeneralConfigMigrated();
 
 	chrome.storage.local.set(configData);
 }
@@ -310,6 +447,10 @@ function logUserScriptsUnavailable() {
  * @returns {Object}
  */
 function parseGeneralConfig(value) {
+	if (value && typeof value === 'object') {
+		return value;
+	}
+
 	if (typeof value !== 'string' || value === '') {
 		return {};
 	}
@@ -373,15 +514,25 @@ function handleRuntimeMessage(message) {
 		case 'config-get-general':
 			sendRuntimeMessage({
 				type: 'config-get-general',
-				value: parseGeneralConfig(getConfig('general'))
+				value: normalizeGeneralConfig(getConfig('general'))
 			});
 			break;
-		case 'config-set-general':
-			setConfig('general', JSON.stringify(message.value || {}));
+		case 'config-set-general': {
+			const currentGeneral = normalizeGeneralConfig(getConfig('general'));
+			const value = parseGeneralConfig(message.value);
+			const mergedGeneral = {
+				searches: typeof value.searches !== 'undefined' ? value.searches : currentGeneral.searches,
+				searches_migrated: 1,
+				search_last: typeof value.search_last !== 'undefined' ? value.search_last : currentGeneral.search_last
+			};
+			const general = normalizeGeneralConfig(mergedGeneral);
+			general.searches_migrated = 1;
+			setConfig('general', JSON.stringify(general));
 			sendRuntimeMessage({
 				type: 'config-set-general-done'
 			});
 			break;
+		}
 		default:
 			throw Error('Unsupported message (' + message.type + ') by background script');
 	}

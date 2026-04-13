@@ -243,6 +243,7 @@ function importFile() {
 
 					setTimeout(() => {
 						requestConfig('pages', 'pages');
+						requestGeneralConfig();
 					}, 1);
 				}
 			}
@@ -485,21 +486,58 @@ function closePageSettings() {
 }
 
 /**
+ * Normalize search URL list by trimming values and removing empty items.
+ * @param {Array|*} value Raw search URL list.
+ * @returns {Array<string>}
+ */
+function normalizeSearchList(value) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	const urls = [];
+	for (let i = 0; i < value.length; i++) {
+		if (typeof value [i] !== 'string') {
+			continue;
+		}
+
+		const trimmed = value [i].trim();
+		if (trimmed !== '') {
+			urls.push(trimmed);
+		}
+	}
+
+	return urls;
+}
+
+/**
+ * Parse textarea content into normalized search URL list.
+ * @param {string} value Textarea value.
+ * @returns {Array<string>}
+ */
+function parseSearchListInput(value) {
+	return normalizeSearchList((value || '').split('\n'));
+}
+
+/**
  * Initialize general settings form.
  * @param {Object} value General settings.
  */
 function initGeneral(value) {
-	document.getElementById('search').value = value.search || '';
+	const general = value && typeof value === 'object' ? value : {};
+	const searches = normalizeSearchList(general.searches);
+
+	document.getElementById('searches').value = searches.join('\n');
 }
 
 /**
  * Save general settings form.
  */
 function saveGeneral() {
-	const search = document.getElementById('search').value;
+	const searches = parseSearchListInput(document.getElementById('searches').value);
 
 	setGeneralConfig({
-		search: search
+		searches: searches
 	});
 }
 

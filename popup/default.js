@@ -5,10 +5,10 @@
 let enabled = false;
 
 /**
- * Configured search URL prefix.
- * @type {string|undefined}
+ * Configured search URL prefixes.
+ * @type {Array<string>}
  */
-let searchUrl = undefined;
+let searchUrls = [];
 
 /**
  * Initialize popup.
@@ -17,7 +17,8 @@ function initPopup() {
 	document.getElementById('options').addEventListener('click', openOptions);
 	document.getElementById('toggle-enabled').addEventListener('click', toggleEnabled);
 	document.getElementById('navigate').addEventListener('change', navigate);
-	document.getElementById('search').addEventListener('click', search);
+	document.getElementById('search-source').addEventListener('change', onSearchSourceChange);
+	document.getElementById('search-form').addEventListener('submit', submitSearch);
 	document.getElementById('open-urls').addEventListener('keyup', openUrls);
 
 	setTimeout(() => {
@@ -27,6 +28,23 @@ function initPopup() {
 	}, 1);
 
 	addRuntimeMessageListener(onRuntimeMessage);
+}
+
+/**
+ * Persist selected search URL as last used value.
+ */
+function onSearchSourceChange() {
+	const searchSource = document.getElementById('search-source').value;
+	rememberLastSearchSource(searchSource);
+}
+
+/**
+ * Handle search form submit from button click or Enter key.
+ * @param {Event} e Submit event.
+ */
+function submitSearch(e) {
+	e.preventDefault();
+	search();
 }
 
 /**
@@ -51,6 +69,84 @@ function initNavigation(pages) {
 }
 
 /**
+ * Normalize search URL list by trimming values and removing empty items.
+ * @param {Array|*} value Raw search URL list.
+ * @returns {Array<string>}
+ */
+function normalizeSearchUrls(value) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	const urls = [];
+	for (let i = 0; i < value.length; i++) {
+		if (typeof value [i] !== 'string') {
+			continue;
+		}
+
+		const trimmed = value [i].trim();
+		if (trimmed !== '') {
+			urls.push(trimmed);
+		}
+	}
+
+	return urls;
+}
+
+/**
+ * Initialize search URL selector.
+ * @param {Array<string>} urls Search URL list.
+ * @param {string} searchLast Last selected search URL.
+ */
+function initSearchSources(urls, searchLast) {
+	const searchSourceSelect = document.getElementById('search-source');
+
+	while (searchSourceSelect.options.length > 1) {
+		searchSourceSelect.remove(1);
+	}
+
+	if (urls.length === 0) {
+		searchSourceSelect.querySelector('option').textContent = 'No search URLs found';
+		return;
+	}
+
+	searchSourceSelect.querySelector('option').textContent = 'Search with...';
+	for (let i = 0; i < urls.length; i++) {
+		const option = document.createElement('option');
+		option.value = urls [i];
+		option.textContent = urls [i];
+		searchSourceSelect.appendChild(option);
+	}
+
+	if (searchLast !== '' && urls.indexOf(searchLast) !== -1) {
+		searchSourceSelect.value = searchLast;
+		return;
+	}
+
+	if (urls.length === 1) {
+		searchSourceSelect.value = urls [0];
+	}
+}
+
+/**
+ * Persist last used search URL without overwriting the search URL list.
+ * @param {string} searchSource Selected search URL.
+ */
+function rememberLastSearchSource(searchSource) {
+	if (typeof searchSource !== 'string' || searchSource === '') {
+		return;
+	}
+
+	if (searchUrls.indexOf(searchSource) === -1) {
+		return;
+	}
+
+	setGeneralConfig({
+		search_last: searchSource
+	});
+}
+
+/**
  * Navigate to selected page URL.
  */
 function navigate() {
@@ -70,18 +166,21 @@ function navigate() {
 }
 
 /**
- * Search using configured search URL.
+ * Search using selected search URL.
  */
 function search() {
 	const query = encodeURIComponent(document.getElementById('query').value);
-	const newTab = document.getElementById('navigate-new').checked;
+	const searchSource = document.getElementById('search-source').value;
+	const newTab = document.getElementById('search-new').checked;
 
-	if (!searchUrl) {
-		writeMessage('<p>Set search url first in options.</p>', true);
+	if (searchSource === '') {
+		writeMessage('<p>Set search URLs first in options and select one in popup.</p>', true);
 		return;
 	}
 
-	const url = searchUrl + query;
+	rememberLastSearchSource(searchSource);
+
+	const url = searchSource + query;
 	openUrl(url, newTab, () => {
 		writeMessage('<p>You have no tab active.</p>', true);
 	}, () => {
@@ -150,9 +249,12 @@ function onRuntimeMessage(message) {
 				initNavigation(pages);
 			}
 			break;
-		case 'config-get-general':
-			searchUrl = message.value.search || undefined;
+		case 'config-get-general': {
+			const general = message.value && typeof message.value === 'object' ? message.value : {};
+			searchUrls = normalizeSearchUrls(general.searches);
+			initSearchSources(searchUrls, typeof general.search_last === 'string' ? general.search_last : '');
 			break;
+		}
 		default:
 			throw Error('Unsupported message (' + message.type + ') by popup script');
 	}

@@ -34,13 +34,19 @@
 				</form>
 			</div>
 
-            <div class="panel">
-                <form id="form-general">
-                    <input class="text-input" id="search" type="text" value="" placeholder="Search url"/>
+			<div class="panel">
+				<form id="form-general">
+					<label for="searches">Search URLs</label>
+					<textarea class="text-input" id="searches" placeholder="https://www.google.com/search?q=
+https://duckduckgo.com/?q="></textarea>
+					<p class="field-hint">
+						Add one search URL prefix per line, ending where the query should be inserted.
+						Example: <code>https://www.google.com/search?q=</code>. In popup, pick any search URL and the query is appended automatically.
+					</p>
 
 					<button type="button" class="save" id="general-save">Save</button>
-                </form>
-            </div>
+				</form>
+			</div>
 
 			<div class="panel">
 				<form id="pages" class="dynamic" data-key="pages">

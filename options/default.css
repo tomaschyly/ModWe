@@ -151,6 +151,24 @@ form textarea {
 
 .template { display: none; }
 
+#form-general #searches {
+	display: block;
+	width: 100%;
+	min-height: 72px;
+}
+
+#form-general .field-hint {
+	margin: 8px 0 16px 0;
+	color: var(--mw-text-muted);
+	font-size: 14px;
+	line-height: 1.35;
+}
+
+#form-general .field-hint code {
+	color: var(--mw-secondary);
+	font-size: 13px;
+}
+
 #toggle-enabled {
 	width: 100%;
 	max-width: 230px;

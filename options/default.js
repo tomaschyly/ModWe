@@ -5,6 +5,12 @@
 const dynamicParams = {};
 
 /**
+ * Current enabled state.
+ * @type {boolean}
+ */
+let enabled = false;
+
+/**
  * Current page settings loaded from storage.
  * @type {Object|null}
  */
@@ -35,12 +41,14 @@ function initOptions() {
 	initDataControls();
 	initDynamicForms();
 
+	document.getElementById('toggle-enabled').addEventListener('click', toggleEnabled);
 	document.getElementById('page-settings').addEventListener('submit', savePageSettings);
 	document.getElementById('page-settings-close').addEventListener('click', closePageSettings);
 	document.getElementById('page-settings-close-nosave').addEventListener('click', closePageSettings);
 	document.getElementById('general-save').addEventListener('click', saveGeneral);
 
 	setTimeout(() => {
+		requestConfig('enabled');
 		requestGeneralConfig();
 	}, 1);
 
@@ -329,7 +337,9 @@ function onRuntimeMessage(message) {
 
 	switch (message.type) {
 		case 'config-get':
-			if (message.key === 'pages') {
+			if (message.key === 'enabled') {
+				initEnabled(message.value === 1);
+			} else if (message.key === 'pages') {
 				initItems(dynamicParams [message.identificator], message.value);
 			} else if (message.key === 'page_settings') {
 				initPageSettings(message.value, message.identificator);
@@ -354,6 +364,32 @@ function onRuntimeMessage(message) {
 		default:
 			throw Error('Unsupported message (' + message.type + ') by options script');
 	}
+}
+
+/**
+ * Initialize enabled button state.
+ * @param {boolean} value Current enabled value.
+ */
+function initEnabled(value) {
+	enabled = value;
+
+	const button = document.getElementById('toggle-enabled');
+	if (enabled) {
+		button.classList.add('enabled');
+		button.textContent = 'Enabled';
+		return;
+	}
+
+	button.classList.remove('enabled');
+	button.textContent = 'Disabled';
+}
+
+/**
+ * Toggle enabled state and persist it.
+ */
+function toggleEnabled() {
+	initEnabled(!enabled);
+	setConfigValue('enabled', enabled ? 1 : 0);
 }
 
 /**

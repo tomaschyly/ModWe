@@ -39,6 +39,13 @@ form textarea:focus { border-color: #ffd700; background: white; }
 
 .template { display: none; }
 
+#toggle-enabled { width: 100%; max-width: 230px; border-color: red; color: red; }
+#toggle-enabled:hover,
+#toggle-enabled:focus { border-color: black; color: black; background: red; }
+#toggle-enabled.enabled { border-color: green; color: green; }
+#toggle-enabled.enabled:hover,
+#toggle-enabled.enabled:focus { border-color: black; color: black; background: green; }
+
 #page-settings-panel { display: none; }
 #page-settings { position: relative; }
 #page-settings-panel .controls { position: absolute; top: 0; right: 0; }

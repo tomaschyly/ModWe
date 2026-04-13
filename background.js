@@ -1,211 +1,256 @@
-if (typeof TCH === 'undefined') {
-	var TCH = {};
+/**
+ * Local cache for values from chrome.storage.
+ * @type {Object}
+ */
+const configData = {};
+
+/**
+ * Background initialization.
+ */
+async function initBackground() {
+	await initConfig();
+	initContentScripts();
+	addRuntimeMessageListener(onRuntimeMessage);
+	initPageActionRules();
 }
 
-if (typeof TCH.Background === 'undefined') {
-	TCH.Background = {
-		/**
-		 * Background initialization.
-		 */
-		Init: async function () {
-			await this.Config.Init ();
+/**
+ * Load configuration from extension storage.
+ * @returns {Promise<void>}
+ */
+function initConfig() {
+	return new Promise(resolve => {
+		chrome.storage.local.get(['enabled', 'pages', 'page_settings', 'general'], response => {
+			Object.assign(configData, response || {});
+			resolve();
+		});
+	});
+}
 
-			this.ContentScripts.Init ();
+/**
+ * Read one value from cached config.
+ * @param {string} key Config key.
+ * @returns {*}
+ */
+function getConfig(key) {
+	if (typeof configData [key] !== 'undefined') {
+		return configData [key];
+	}
 
-			chrome.runtime.onMessage.addListener (this.OnMessage.bind (this));
+	return null;
+}
 
-			// chrome.runtime.onInstalled.addListener (() => {
-			// 	chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
-			// 		chrome.declarativeContent.onPageChanged.addRules ([
-			// 			{
-			// 				conditions: [new chrome.declarativeContent.PageStateMatcher({})],
-			// 				actions: [new chrome.declarativeContent.ShowPageAction ()]
-			// 			}
-			// 		]);
-			// 	});
-			// });
-			chrome.declarativeContent.onPageChanged.removeRules (undefined, () => {
-				chrome.declarativeContent.onPageChanged.addRules ([
-					{
-						conditions: [new chrome.declarativeContent.PageStateMatcher({})],
-						actions: [new chrome.declarativeContent.ShowPageAction ()]
-					}
-				]);
-			});
-		},
+/**
+ * Read full cached config.
+ * @returns {Object}
+ */
+function getAllConfig() {
+	return configData;
+}
 
-		Config: {
-			data: {},
+/**
+ * Write one config value and persist.
+ * @param {string} key Config key.
+ * @param {*} value Config value.
+ */
+function setConfig(key, value) {
+	configData [key] = value;
+	chrome.storage.local.set(configData);
+}
 
-			/**
-			 * Config initialization.
-			 */
-			Init: function () {
-				return new Promise ((resolve, reject) => {
-                    chrome.storage.local.get (['enabled', 'pages', 'page_settings', 'general'], response => {
-						this.data = response;
+/**
+ * Replace config values and persist.
+ * @param {Object} data New config object.
+ */
+function setAllConfig(data) {
+	const newData = data && typeof data === 'object' ? data : {};
 
-						resolve ();
-					});
-				});
-			},
+	Object.keys(configData).forEach(key => {
+		delete configData [key];
+	});
+	Object.assign(configData, newData);
 
-			/**
-			 * Get data for key.
-			 */
-			Get: function (key) {
-				if (typeof this.data [key] !== 'undefined') {
-					return this.data [key];
-				}
+	chrome.storage.local.set(configData);
+}
 
-				return null;
-			},
+/**
+ * Register content script injection listener.
+ */
+function initContentScripts() {
+	if (!chrome.tabs.onUpdated.hasListener(onTabUpdate)) {
+		chrome.tabs.onUpdated.addListener(onTabUpdate);
+	}
+}
 
-			/**
-			 * Get all of data.
-			 */
-			GetAll: function () {
-				return this.data;
-			},
+/**
+ * Handle updated tabs and execute page-specific CSS/JS.
+ * @param {number} tabId Updated tab id.
+ * @param {Object} changeInfo Tab update info.
+ * @param {Object} tab Updated tab.
+ */
+function onTabUpdate(tabId, changeInfo, tab) {
+	if (changeInfo.status !== 'complete' || getConfig('enabled') !== 1) {
+		return;
+	}
 
-			/**
-			 * Set data for key.
-			 */
-			Set: function (key, value) {
-				this.data [key] = value;
+	const pages = Array.isArray(getConfig('pages')) ? getConfig('pages') : [];
+	if (pages.length === 0) {
+		return;
+	}
 
-				chrome.storage.local.set (this.data);
-			},
+	const url = typeof tab.url === 'string' ? tab.url : '';
 
-			/**
-			 * Set all of data.
-			 */
-			SetAll: function (data) {
-				this.data = data;
-
-				chrome.storage.local.set (this.data);
-			}
-		},
-
-		ContentScripts: {
-			/**
-			 * ContentScripts initialization.
-			 */
-			Init: function () {
-				const listenerParams = {
-					properties: ['status']
-				};
-
-				if (!chrome.tabs.onUpdated.hasListener (this.OnTabUpdate.bind (this)/* , listenerParams */)) {
-					chrome.tabs.onUpdated.addListener (this.OnTabUpdate.bind (this)/* , listenerParams */);
-				}
-			},
-
-			/**
-			 * If enabled check pages and insert/execute correct CSS/JS.
-			 */
-			OnTabUpdate: function (tabId, changeInfo, tab) {
-				if (changeInfo.status === 'complete' && TCH.Background.Config.Get ('enabled') === 1) {
-					const pages = TCH.Background.Config.Get ('pages') !== null ? TCH.Background.Config.Get ('pages') : [];
-
-					if (pages.length > 0) {
-						const url = tab.url;
-
-						for (let i = 0; i < pages.length; i++) {
-							if (typeof pages [i].regexp === 'string' && pages [i].regexp !== '') {
-								const regexp = new RegExp (pages [i].regexp);
-
-								if (regexp.test (url)) {
-									const settings = this.PageSettings (pages [i].id);
-									
-									if (settings !== null) {
-										if (typeof settings.css === 'string' && settings.css !== '') {
-											chrome.tabs.insertCSS (tabId, {
-												code: settings.css
-											});
-										}
-
-										if (typeof settings.js === 'string' && settings.js !== '') {
-											chrome.tabs.executeScript (tabId, {
-												code: settings.js
-											});
-										}
-									}
-
-									break;
-								}
-							}
-						}
-					}
-				}
-			},
-
-			/**
-			 * Get page settings for id.
-			 */
-			PageSettings: function (id) {
-				const settings = TCH.Background.Config.Get ('page_settings') !== null ? TCH.Background.Config.Get ('page_settings') : {};
-
-				return typeof settings [id] !== undefined ? settings [id] : null;
-			}
-		},
-
-		/**
-		 * Message received, handle according to type.
-		 */
-		OnMessage: function (message) {
-			if (typeof message.type !== 'undefined') {
-				switch (message.type) {
-					case 'config-get':
-						chrome.runtime.sendMessage ({
-							type: 'config-get',
-							key: message.key,
-							value: this.Config.Get (message.key),
-							identificator: message.identificator
-						});
-						break;
-					case 'config-get-all':
-						chrome.runtime.sendMessage ({
-							type: 'config-get-all',
-							data: this.Config.GetAll ()
-						});
-						break;
-					case 'config-set':
-						this.Config.Set (message.key, message.value);
-
-						chrome.runtime.sendMessage ({
-							type: 'config-set-done',
-							key: message.key
-						});
-						break;
-					case 'config-set-all':
-						this.Config.SetAll (message.data);
-
-						chrome.runtime.sendMessage ({
-							type: 'config-set-all-done'
-						});
-						break;
-                    case 'config-get-general':
-                        var general = this.Config.Get ('general');
-
-                        chrome.runtime.sendMessage ({
-                            type: 'config-get-general',
-                            value: general ? JSON.parse (general) : {}
-                        });
-                        break;
-                    case 'config-set-general':
-                        this.Config.Set ('general', JSON.stringify (message.value || {}));
-
-						chrome.runtime.sendMessage ({
-                            type: 'config-set-general-done'
-						});
-                        break;
-					default:
-						throw Error ('Unsupported message (' + message.type + ') by background script');
-				}
-			}
+	for (let i = 0; i < pages.length; i++) {
+		const page = pages [i];
+		if (typeof page.regexp !== 'string' || page.regexp === '') {
+			continue;
 		}
-	};
 
-	TCH.Background.Init ();
+		const regexp = createRegExp(page.regexp);
+		if (regexp === null) {
+			continue;
+		}
+
+		if (regexp.test(url)) {
+			applyPageSettings(tabId, getPageSettings(page.id));
+			break;
+		}
+	}
 }
+
+/**
+ * Create RegExp from stored pattern.
+ * @param {string} pattern String pattern from config.
+ * @returns {null|RegExp}
+ */
+function createRegExp(pattern) {
+	try {
+		return new RegExp(pattern);
+	} catch (error) {
+		return null;
+	}
+}
+
+/**
+ * Get page settings by page id.
+ * @param {string|number} id Page identifier.
+ * @returns {null|Object}
+ */
+function getPageSettings(id) {
+	const settings = getConfig('page_settings');
+	if (settings === null || typeof settings !== 'object') {
+		return null;
+	}
+
+	return typeof settings [id] !== 'undefined' ? settings [id] : null;
+}
+
+/**
+ * Apply CSS and JS settings for one tab.
+ * @param {number} tabId Target tab id.
+ * @param {Object|null} settings Page settings.
+ */
+function applyPageSettings(tabId, settings) {
+	if (settings === null || typeof settings !== 'object') {
+		return;
+	}
+
+	if (typeof settings.css === 'string' && settings.css !== '') {
+		chrome.tabs.insertCSS(tabId, {
+			code: settings.css
+		});
+	}
+
+	if (typeof settings.js === 'string' && settings.js !== '') {
+		chrome.tabs.executeScript(tabId, {
+			code: settings.js
+		});
+	}
+}
+
+/**
+ * Parse general settings JSON from config.
+ * @param {*} value Stored value.
+ * @returns {Object}
+ */
+function parseGeneralConfig(value) {
+	if (typeof value !== 'string' || value === '') {
+		return {};
+	}
+
+	try {
+		return JSON.parse(value);
+	} catch (error) {
+		return {};
+	}
+}
+
+/**
+ * Handle incoming runtime messages.
+ * @param {Object} message Runtime message.
+ */
+function onRuntimeMessage(message) {
+	if (!message || typeof message.type === 'undefined') {
+		return;
+	}
+
+	switch (message.type) {
+		case 'config-get':
+			sendRuntimeMessage({
+				type: 'config-get',
+				key: message.key,
+				value: getConfig(message.key),
+				identificator: message.identificator
+			});
+			break;
+		case 'config-get-all':
+			sendRuntimeMessage({
+				type: 'config-get-all',
+				data: getAllConfig()
+			});
+			break;
+		case 'config-set':
+			setConfig(message.key, message.value);
+			sendRuntimeMessage({
+				type: 'config-set-done',
+				key: message.key
+			});
+			break;
+		case 'config-set-all':
+			setAllConfig(message.data);
+			sendRuntimeMessage({
+				type: 'config-set-all-done'
+			});
+			break;
+		case 'config-get-general':
+			sendRuntimeMessage({
+				type: 'config-get-general',
+				value: parseGeneralConfig(getConfig('general'))
+			});
+			break;
+		case 'config-set-general':
+			setConfig('general', JSON.stringify(message.value || {}));
+			sendRuntimeMessage({
+				type: 'config-set-general-done'
+			});
+			break;
+		default:
+			throw Error('Unsupported message (' + message.type + ') by background script');
+	}
+}
+
+/**
+ * Configure page action rules.
+ */
+function initPageActionRules() {
+	chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
+		chrome.declarativeContent.onPageChanged.addRules([
+			{
+				conditions: [new chrome.declarativeContent.PageStateMatcher({})],
+				actions: [new chrome.declarativeContent.ShowPageAction()]
+			}
+		]);
+	});
+}
+
+initBackground();

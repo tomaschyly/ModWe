@@ -16,7 +16,7 @@
 		"downloads"
 	],
 	"background": {
-		"scripts": ["background.js"]
+		"scripts": ["service/runtime.js", "background.js"]
 	},
 	"page_action": {
 		"default_icon": "icons/ic_dashboard_48dp_1x.png",

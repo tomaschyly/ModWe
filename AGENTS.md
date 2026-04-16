@@ -4,6 +4,11 @@ ModWe is a Chromium browser extension that modifies websites using user-defined 
 
 These instructions apply to the whole repository unless a deeper `AGENTS.md` overrides them.
 
+## Branch safety rule
+
+- For implementation work (any non-planning/non-question-only task), if current branch is `main` or `master`, ask the user first whether to switch to a new `version/*` or `feature/*` branch before making edits.
+- Do not start code changes on `main`/`master` until the user confirms how to proceed.
+
 ## Release versioning rule
 
 - Files that must be updated for each extension version bump:

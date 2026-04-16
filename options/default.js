@@ -46,6 +46,7 @@ function initOptions() {
 	document.getElementById('page-settings-close').addEventListener('click', closePageSettings);
 	document.getElementById('page-settings-close-nosave').addEventListener('click', closePageSettings);
 	document.getElementById('general-save').addEventListener('click', saveGeneral);
+	document.querySelector('#modal .modal-content').addEventListener('click', closeModal);
 
 	setTimeout(() => {
 		requestConfig('enabled');
@@ -369,14 +370,21 @@ async function exportData(data) {
 }
 
 /**
- * Open modal with message and auto-close animation.
- * @param {string} message Modal message.
+ * Clear pending modal auto-close timeout.
  */
-function openModal(message) {
+function clearModalCloseTimeout() {
 	if (modalCloseTimeout !== null) {
 		clearTimeout(modalCloseTimeout);
 		modalCloseTimeout = null;
 	}
+}
+
+/**
+ * Open modal with message and auto-close animation.
+ * @param {string} message Modal message.
+ */
+function openModal(message) {
+	clearModalCloseTimeout();
 
 	const modal = document.getElementById('modal');
 	modal.querySelector('.modal-content p').textContent = message;
@@ -403,6 +411,8 @@ function openModal(message) {
  * Close modal with animation.
  */
 function closeModal() {
+	clearModalCloseTimeout();
+
 	const modal = document.getElementById('modal');
 	const height = modal.getBoundingClientRect().height;
 

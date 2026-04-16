@@ -137,7 +137,7 @@ form textarea {
 	width: 100%;
 	max-width: none;
 	height: auto;
-	padding: 0 0 16px 0;
+	padding: 56px 0 16px 0;
 	margin: 0;
 }
 
@@ -157,13 +157,18 @@ form textarea {
 .titlebar {
 	display: flex;
 	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 100;
 	width: 100%;
 	max-width: none;
 	padding: 8px 16px;
 	border: 0;
 	border-bottom: 1px solid var(--mw-secondary-dark);
 	border-radius: 0;
-	margin: 0 0 16px 0;
+	margin: 0;
 	background: var(--mw-primary-dark);
 	box-shadow: none;
 }
@@ -231,6 +236,13 @@ form textarea {
 	background: var(--mw-success);
 }
 
+#toggle-hint {
+	margin: -8px 0 16px 0;
+	color: var(--mw-text-muted);
+	font-size: 14px;
+	line-height: 1.35;
+}
+
 #page-settings-panel { display: none; }
 #page-settings { position: relative; }
 #page-settings-panel .controls { position: absolute; top: 0; right: 0; }
@@ -244,7 +256,7 @@ form textarea {
 	margin-bottom: 16px;
 }
 
-#modal { display: none; justify-content: center; position: fixed; left: 0; top: 0; right: 0; transition: top 0.4s linear; }
+#modal { display: none; justify-content: center; position: fixed; left: 0; top: 0; right: 0; z-index: 200; pointer-events: none; transition: top 0.4s linear; }
 #modal.visible { display: flex; }
 
 #modal .modal-content {
@@ -257,6 +269,8 @@ form textarea {
 	margin-top: 8px;
 	background: var(--mw-primary-light);
 	box-shadow: 0 2px 10px var(--mw-shadow);
+	pointer-events: auto;
+	cursor: pointer;
 }
 
 #modal .modal-content p { margin-bottom: 8px; color: var(--mw-text-primary); }

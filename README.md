@@ -1,36 +1,48 @@
 # ModWe
 
-Originally for Firefox (v1.x.x), now for browsers based on Chromium (v2.x.x) extension to modify websites using custom CSS and JS snippets.
+ModWe is a Chromium extension that modifies websites using your own CSS and JS snippets.
 
-Usefull for Developers, you can add Pages for which you can write CSS and JS snippets wich will be injected into them. All of them are custom writen by you on the Options page.
+## Version Support
 
-Both CSS and JS get inserted only after Page has been fully loaded. They are also inserted only on Pages that match RegExp which you write for them.
+Only **v2** is supported and maintained.
 
-This extension does not sync with your profile, instead you can export and import your options from the Options page.
+The old **v1** Firefox extension is no longer supported.
+
+## Browser Compatibility
+
+ModWe v2 targets Chromium-compatible browsers with Manifest V3 support.
+
+It relies on `chrome.userScripts` for user JS execution.
+
+Firefox support for v2 is **not provided**.
+
+## Features
+
+- Configure page rules using names, URLs, and RegExp matching.
+- Inject custom CSS and JS into matched pages.
+- Toggle ModWe quickly from the popup.
+- Import and export configuration as JSON.
+- Keep all data stored locally in extension storage.
 
 ## Installation
 
-### Firefox (v1.x.x)
+1. Download the latest release archive from: <https://github.com/tomaschyly/ModWe/releases>
+2. Unzip it to a local folder.
+3. Open your browser extension page.
+4. Enable Developer Mode.
+5. Load the unpacked extension folder.
 
-1. Go [here](https://addons.mozilla.org/en-US/firefox/addon/modwe/) and click Add to Firefox.
+## Important Requirement
 
-### Chrome (v2.x.x)
+For JS snippets to run, the browser option to allow user scripts for this extension must be enabled.
 
-1. Go [here](https://github.com/tomaschyly/ModWe/releases) and download latest archive.
-2. Unzip somewhere.
-3. In your browser go to extensions and with developer mode enabled load unpacked extension.
+If user scripts are disabled, CSS may still apply but JS snippets will not execute.
 
-## Important Notes
+## Usage
 
-There are no snippets provided with the extensions. You have to write all CSS and JS.
-
-All the data is stored locally, it is not transmitted online.
-
-## How to Use
-
-1. Use the toolbar button to open popup.
-2. Use the right button to open options.
-3. Add Page, write any Name you want as identifier. Url is used from popup for quick navigation. RegExp needs to be valid RegExp (e.g.: /google\.com/), it is used by script to determine correct Page for CSS/JS injection.
-4. Use the settings button to open Page settings, here you can write your CSS/JS.
-5. In popup make sure to toggle to Enabled.
-6. Now when you visit any Page which is valid by your RegExp, CSS/JS will be injected.
+1. Open the popup from the toolbar.
+2. Open Options from the popup.
+3. Add a page entry and provide a valid RegExp (for example: `/google\.com/`).
+4. Open page settings and write CSS/JS snippets.
+5. Enable ModWe in the popup.
+6. Visit a matching page to apply your snippets.

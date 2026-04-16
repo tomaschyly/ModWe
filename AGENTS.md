@@ -24,6 +24,32 @@ These instructions apply to the whole repository unless a deeper `AGENTS.md` ove
     2. Update version value in `manifest.json`.
     3. Commit version change with message: `Next version`.
 
+## Release zip packaging
+
+- Build release zip from repository root so `manifest.json` is at zip root (no wrapping parent directory).
+- Keep all release artifacts in `releases/`.
+- Read release version from `manifest.json` and name archive as `releases/ModWe-<version>-release.zip`.
+- Exclude repository/editor metadata and agent docs from release archive:
+    - `.git/*`
+    - `.idea/*`
+    - `.gitignore`
+    - `AGENTS.md`
+    - `CLAUDE.md`
+    - `ModWe-*.zip`
+    - `releases/*`
+- Standard command:
+```bash
+VERSION=$(sed -n 's/.*"version": "\(.*\)".*/\1/p' manifest.json | head -n1)
+mkdir -p releases
+zip -rFS "releases/ModWe-${VERSION}-release.zip" . \
+  -x '.git/*' '.idea/*' '.gitignore' 'AGENTS.md' 'CLAUDE.md' 'ModWe-*.zip' 'releases/*'
+```
+- Validate exclusions:
+```bash
+unzip -l "releases/ModWe-${VERSION}-release.zip" | rg 'AGENTS\.md|CLAUDE\.md|\.gitignore|^.* releases/' || true
+```
+- Validation output should be empty.
+
 ## General coding conventions
 
 ### Code commenting

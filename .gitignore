@@ -6,3 +6,6 @@
 *.ipr
 *.iws
 .idea/
+
+# Release artifacts
+releases/
